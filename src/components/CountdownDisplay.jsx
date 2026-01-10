@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import bgGradImage from "../assets/bg-grad.png";
 
 const CountdownDisplay = ({
   currentValue,
@@ -8,13 +9,11 @@ const CountdownDisplay = ({
   backgroundColor,
   displayMode = "normal",
   mouseClickEnabled = true,
+  countdownRate = 0,
+  elapsedSeconds = 0,
 }) => {
   const [sizeClass, setSizeClass] = useState("");
   const [imageError, setImageError] = useState(false);
-
-  // External image URL
-  const externalImageUrl =
-    "https://graduate.buu.ac.th/wp-content/uploads/2024/08/Banner01.png";
 
   useEffect(() => {
     // Determine digit count and set appropriate size class
@@ -47,6 +46,7 @@ const CountdownDisplay = ({
         className="countdown-display"
         style={{
           ...customStyles,
+          backgroundColor: "#000000", // Pure black background
           position: "fixed", // Changed to fixed positioning
           top: 0,
           left: 0,
@@ -75,7 +75,7 @@ const CountdownDisplay = ({
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
-                color: fontColor,
+                color: "#888888",
                 textAlign: "center",
                 padding: "20px",
               }}
@@ -88,19 +88,35 @@ const CountdownDisplay = ({
               </div>
             </div>
           ) : (
-            <img
-              src={externalImageUrl}
-              alt="Banner"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover", // Changed to cover
-                objectPosition: "center", // Center the image
-                position: "absolute",
-                top: 0,
-                left: 0,
-              }}
-            />
+            <>
+              <img
+                src={bgGradImage}
+                alt="Banner"
+                onError={() => setImageError(true)}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  filter: "brightness(0.9)", // Reduce brightness to 90%
+                }}
+              />
+              {/* Dark overlay for additional dimming */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "rgba(0, 0, 0, 0.2)", // 20% black overlay
+                  pointerEvents: "none",
+                }}
+              />
+            </>
           )}
         </div>
       </div>
@@ -117,6 +133,31 @@ const CountdownDisplay = ({
           <span>{currentValue}</span>
         </div>
       )}
+
+      {isCountingDown && countdownRate > 0 && currentValue > 0 && displayMode === "normal" && (() => {
+        // Calculate estimated time remaining
+        const estimatedSecondsRemaining = Math.round((currentValue / countdownRate) * 60);
+        const hours = Math.floor(estimatedSecondsRemaining / 3600);
+        const minutes = Math.floor((estimatedSecondsRemaining % 3600) / 60);
+        const seconds = estimatedSecondsRemaining % 60;
+        const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        return (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "20px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              fontSize: "1rem",
+              color: "#5a5a5a",
+              textAlign: "center",
+            }}
+          >
+            {Math.round(countdownRate)} # {timeString}
+          </div>
+        );
+      })()}
 
       {!isCountingDown && currentValue > 0 && displayMode === "normal" && (
         <div className="start-hint">
