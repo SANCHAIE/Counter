@@ -248,6 +248,7 @@ body {
 
 .input-group input {
   flex: 1;
+  min-width: 120px;
   padding: 12px 16px;
   background-color: var(--medium-gray);
   border: 1px solid var(--gold-dark);

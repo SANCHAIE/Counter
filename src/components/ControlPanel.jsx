@@ -21,18 +21,25 @@ const ControlPanel = ({
   setBackgroundColor,
   mouseClickEnabled,
   setMouseClickEnabled,
+  eventTitle,
+  setEventTitle,
+  overlayOpacity,
+  setOverlayOpacity,
 }) => {
   const [newSetValue, setNewSetValue] = useState("");
+  const [newSetName, setNewSetName] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [editName, setEditName] = useState("");
 
   const handleAddSet = () => {
     if (isCountingDown) return; // Prevent adding sets while counting down
 
     const value = parseInt(newSetValue);
     if (!isNaN(value) && value > 0) {
-      onAddSet(value);
+      onAddSet(value, newSetName);
       setNewSetValue("");
+      setNewSetName("");
     }
   };
 
@@ -40,11 +47,12 @@ const ControlPanel = ({
     setIsCountingDown(!isCountingDown);
   };
 
-  const startEditingSet = (index, currentValue) => {
+  const startEditingSet = (index, currentValue, currentName) => {
     if (isCountingDown) return; // Prevent editing while counting down
 
     setEditingIndex(index);
     setEditValue(currentValue.toString());
+    setEditName(currentName || "");
   };
 
   const saveEdit = (index) => {
@@ -52,7 +60,7 @@ const ControlPanel = ({
 
     const value = parseInt(editValue);
     if (!isNaN(value) && value > 0) {
-      onEditSet(index, value);
+      onEditSet(index, value, editName);
       setEditingIndex(null);
     }
   };
@@ -70,8 +78,28 @@ const ControlPanel = ({
   return (
     <div className={`control-panel ${visible ? "visible" : "hidden"}`}>
       <div className="control-section">
+        <h3>Event Title</h3>
+        <div className="input-group">
+          <input
+            type="text"
+            value={eventTitle}
+            onChange={(e) => setEventTitle(e.target.value)}
+            placeholder="e.g. พิธีพระราชทานปริญญาบัตร ปีการศึกษา 2567"
+            disabled={isCountingDown}
+          />
+        </div>
+      </div>
+
+      <div className="control-section">
         <h3>Add Countdown Set</h3>
         <div className="input-group">
+          <input
+            type="text"
+            value={newSetName}
+            onChange={(e) => setNewSetName(e.target.value)}
+            placeholder="Set name (optional)"
+            disabled={isCountingDown}
+          />
           <input
             type="number"
             min="1"
@@ -108,6 +136,13 @@ const ControlPanel = ({
                 {editingIndex === index ? (
                   <div className="edit-set-form">
                     <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Set name (optional)"
+                      disabled={isCountingDown}
+                    />
+                    <input
                       type="number"
                       min="1"
                       value={editValue}
@@ -135,7 +170,9 @@ const ControlPanel = ({
                     <div className="set-details">
                       <div className="set-icon">{index + 1}</div>
                       <div className="set-values">
-                        <div className="set-name">Set {index + 1}</div>
+                        <div className="set-name">
+                          {set.name || `Set ${index + 1}`}
+                        </div>
                         <div className="set-progress">
                           {set.currentValue} / {set.startValue}
                         </div>
@@ -145,7 +182,7 @@ const ControlPanel = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          startEditingSet(index, set.startValue);
+                          startEditingSet(index, set.startValue, set.name);
                         }}
                         className={`icon-btn edit-btn ${
                           isCountingDown ? "disabled-btn" : ""
@@ -219,6 +256,22 @@ const ControlPanel = ({
           >
             Mouse Click Disabled
           </div>
+        </div>
+
+        {/* Overlay Opacity Slider */}
+        <div style={{ marginTop: "15px" }}>
+          <label style={{ display: "block", marginBottom: "8px", fontSize: "0.9rem", color: "#ccc" }}>
+            ความโปร่งใสหน้าจอพัก: {Math.round(overlayOpacity * 100)}%
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={overlayOpacity}
+            onChange={(e) => setOverlayOpacity(parseFloat(e.target.value))}
+            style={{ width: "100%", cursor: "pointer" }}
+          />
         </div>
       </div>
 

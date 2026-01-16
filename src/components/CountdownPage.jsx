@@ -14,6 +14,10 @@ function CountdownPage() {
     return localStorage.getItem("countdownBackgroundColor") || "#666363"; // New default: medium gray
   });
 
+  const [eventTitle, setEventTitle] = useState(() => {
+    return localStorage.getItem("eventTitle") || "พิธีพระราชทานปริญญาบัตร ปีการศึกษา 2567";
+  });
+
   const [countdownSets, setCountdownSets] = useState(() => {
     // Load from localStorage on initial render
     const savedSets = localStorage.getItem("countdownSets");
@@ -47,6 +51,12 @@ function CountdownPage() {
   // New state for display modes
   const [displayMode, setDisplayMode] = useState("normal"); // "normal", "black-screen", "work-image"
 
+  // New state for overlay opacity (work-image mode)
+  const [overlayOpacity, setOverlayOpacity] = useState(() => {
+    const saved = localStorage.getItem("overlayOpacity");
+    return saved ? parseFloat(saved) : 0.75;
+  });
+
   // New state for mouse click enablement
   const [mouseClickEnabled, setMouseClickEnabled] = useState(() => {
     const savedState = localStorage.getItem("mouseClickEnabled");
@@ -71,6 +81,11 @@ function CountdownPage() {
     localStorage.setItem("countdownBackgroundColor", backgroundColor);
   }, [backgroundColor]);
 
+  // Save event title to localStorage
+  useEffect(() => {
+    localStorage.setItem("eventTitle", eventTitle);
+  }, [eventTitle]);
+
   // Save mouse click setting to localStorage
   useEffect(() => {
     localStorage.setItem(
@@ -78,6 +93,11 @@ function CountdownPage() {
       JSON.stringify(mouseClickEnabled)
     );
   }, [mouseClickEnabled]);
+
+  // Save overlay opacity to localStorage
+  useEffect(() => {
+    localStorage.setItem("overlayOpacity", overlayOpacity.toString());
+  }, [overlayOpacity]);
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -180,10 +200,10 @@ function CountdownPage() {
     }
   }, [countdownSets, currentSetIndex, isCountingDown]);
 
-  const addCountdownSet = (startValue) => {
+  const addCountdownSet = (startValue, name = "") => {
     setCountdownSets([
       ...countdownSets,
-      { startValue, currentValue: startValue },
+      { startValue, currentValue: startValue, name },
     ]);
   };
 
@@ -243,6 +263,11 @@ function CountdownPage() {
     const nextIndex = (currentSetIndex + 1) % countdownSets.length;
     setCurrentSetIndex(nextIndex);
 
+    // Reset countdown tracking for new set
+    setCountdownTimes([]);
+    setCountdownRate(0);
+    setElapsedSeconds(0);
+
     // Start the countdown for the new set
     setIsCountingDown(true);
   }, [countdownSets.length, currentSetIndex]);
@@ -253,6 +278,11 @@ function CountdownPage() {
     const countKeys = ["Enter", " ", "Space"];
 
     const handleKeyDown = (e) => {
+      // Ignore keyboard shortcuts when user is typing in an input field
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+        return;
+      }
+
       // Handle Shift+1 to show black screen (no numbers)
       if ((e.key === "1" || e.key === "!") && e.shiftKey) {
         e.preventDefault();
@@ -412,6 +442,12 @@ function CountdownPage() {
           mouseClickEnabled={mouseClickEnabled}
           countdownRate={countdownRate}
           elapsedSeconds={elapsedSeconds}
+          setName={countdownSets[currentSetIndex]?.name || ""}
+          setIndex={currentSetIndex}
+          totalValue={countdownSets[currentSetIndex]?.startValue || 0}
+          eventTitle={eventTitle}
+          countdownSets={countdownSets}
+          overlayOpacity={overlayOpacity}
         />
 
         <ControlPanel
@@ -422,7 +458,7 @@ function CountdownPage() {
           countdownSets={countdownSets}
           isCountingDown={isCountingDown}
           setIsCountingDown={setIsCountingDown}
-          onEditSet={(index, newValue) => {
+          onEditSet={(index, newValue, newName) => {
             setCountdownSets((prevSets) => {
               const newSets = [...prevSets];
               newSets[index] = {
@@ -430,6 +466,7 @@ function CountdownPage() {
                 currentValue: isCountingDown
                   ? newSets[index].currentValue
                   : newValue,
+                name: newName !== undefined ? newName : newSets[index].name,
               };
               return newSets;
             });
@@ -452,8 +489,12 @@ function CountdownPage() {
           setBackgroundColor={setBackgroundColor}
           displayMode={displayMode}
           setDisplayMode={setDisplayMode}
+          overlayOpacity={overlayOpacity}
+          setOverlayOpacity={setOverlayOpacity}
           mouseClickEnabled={mouseClickEnabled}
           setMouseClickEnabled={setMouseClickEnabled}
+          eventTitle={eventTitle}
+          setEventTitle={setEventTitle}
         />
       </div>
     </div>
